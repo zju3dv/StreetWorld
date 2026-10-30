@@ -1,0 +1,639 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>EasyDrive WebUI</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #000000;
+      --panel: #101720;
+      --text: #e8edf5;
+      --muted: #9babbe;
+      --grid: #253448;
+      --bar: #2379c9;
+      --border: #303d4e;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      overflow: hidden;
+    }
+    .shell {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(280px, 28vw);
+      grid-template-rows: minmax(0, 1fr) auto;
+      gap: 16px;
+      height: 100vh;
+      padding: clamp(16px, 2.5vw, 48px);
+    }
+    .stage {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 0;
+      min-height: 0;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    #frontImage {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      background: var(--bg);
+    }
+    .waiting {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      letter-spacing: 0.04em;
+      background: var(--panel);
+    }
+    .bars {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+      pointer-events: none;
+    }
+    .barBox {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 18px;
+    }
+    .barLabel {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+      font-size: clamp(12px, 0.85vw, 16px);
+      line-height: 20px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .barLabel span:last-child {
+      color: var(--muted);
+      font-variant-numeric: tabular-nums;
+    }
+    .barScale {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 14px;
+    }
+    .barScale span:nth-child(2) { text-align: center; }
+    .barScale span:last-child { text-align: right; }
+    .track {
+      --position: 50%;
+      position: relative;
+      height: 10px;
+      background: var(--grid);
+      border-radius: 999px;
+    }
+    .track::before {
+      content: "";
+      position: absolute;
+      top: -3px;
+      bottom: -3px;
+      left: 50%;
+      width: 2px;
+      background: #536577;
+      transform: translateX(-1px);
+      z-index: 2;
+    }
+    .fill {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      width: 0;
+      border-radius: 999px;
+      background: var(--bar);
+    }
+    .thumb {
+      position: absolute;
+      top: 1px;
+      left: var(--position);
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--bar);
+      transform: translateX(-50%);
+      z-index: 3;
+    }
+    .side {
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr) minmax(0, 1fr);
+      gap: 16px;
+      min-width: 0;
+      min-height: 0;
+    }
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .metric {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+      min-width: 0;
+    }
+    .metric span {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      color: var(--muted);
+      font-size: 11px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .metric strong {
+      display: block;
+      margin-top: 10px;
+      font-size: 18px;
+      font-variant-numeric: tabular-nums;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .plotCard {
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      padding: 16px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+    }
+    .plotTitle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0 0 14px;
+      color: var(--text);
+      font-size: 12px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .plotName {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .plotValue {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      margin-left: auto;
+      font-size: 20px;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: normal;
+      text-transform: none;
+      white-space: nowrap;
+    }
+    .plotValue small {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 400;
+    }
+    .icon {
+      flex: 0 0 auto;
+      width: 16px;
+      height: 16px;
+      color: var(--bar);
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.7;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .iconSymbols { position: absolute; width: 0; height: 0; overflow: hidden; }
+    .metricTableCard {
+      display: none;
+      padding: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .metricTable {
+      width: 100%;
+      border-collapse: collapse;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-variant-numeric: tabular-nums;
+    }
+    .metricTable th, .metricTable td {
+      padding: 9px 10px;
+      border-bottom: 1px solid var(--border);
+      text-align: right;
+      white-space: nowrap;
+    }
+    .metricTable th {
+      color: var(--muted);
+      background: var(--panel);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .metricTable td {
+      color: var(--text);
+      background: var(--bg);
+      font-size: 14px;
+    }
+    .metricTable th:first-child, .metricTable td:first-child {
+      text-align: left;
+      color: var(--muted);
+    }
+    .metricTable tr:last-child th, .metricTable tr:last-child td {
+      border-bottom: 0;
+    }
+    body.metricOnly .shell {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      padding: 0;
+    }
+    body.metricOnly .stage,
+    body.metricOnly .bars,
+    body.metricOnly .metrics,
+    body.metricOnly .plotCard {
+      display: none;
+    }
+    body.metricOnly .side {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100vw;
+      height: 100vh;
+      background: transparent;
+      border: 0;
+      border-radius: 0;
+      box-shadow: none;
+    }
+    body.metricOnly .metricTableCard {
+      width: min(900px, 92vw);
+      padding: 0;
+      border: 0;
+    }
+    body.metricOnly .metricTableCard .plotTitle {
+      display: none;
+    }
+    body.metricOnly .metricTable {
+      border: 1px solid var(--border);
+      border-radius: 16px;
+    }
+    body.metricOnly .metricTable th,
+    body.metricOnly .metricTable td {
+      padding: 24px 30px;
+      font-size: 30px;
+    }
+    body.metricOnly .metricTable th {
+      font-size: 22px;
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      flex: 1;
+      min-height: 0;
+      background: var(--panel);
+      border-radius: 6px;
+    }
+    @media (max-width: 900px) {
+      body { overflow: auto; }
+      .shell { grid-template-columns: 1fr; grid-template-rows: auto auto auto; height: auto; min-height: 100vh; }
+      .stage { aspect-ratio: 16 / 9; }
+      .side { grid-template-rows: auto 240px 240px; }
+    }
+    @media (max-width: 600px) {
+      .bars { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <svg class="iconSymbols" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+    <symbol id="icon-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+    <symbol id="icon-speed" viewBox="0 0 24 24"><path d="M4.2 18a9 9 0 1 1 15.6 0M12 4v2M5.6 7.6 7 9m11.4-1.4L17 9M3 13h2m14 0h2M12 13l4-4"/><circle cx="12" cy="13" r="1.5"/></symbol>
+    <symbol id="icon-angular" viewBox="0 0 24 24"><path d="M19 8a8 8 0 1 0 1 7M19 3v5h-5M12 8v4l-3 3"/></symbol>
+    <symbol id="icon-connection" viewBox="0 0 24 24"><path d="M5 5a10 10 0 0 0 0 14M19 5a10 10 0 0 1 0 14M8 8a6 6 0 0 0 0 8M16 8a6 6 0 0 1 0 8"/><circle cx="12" cy="12" r="1.5"/></symbol>
+  </svg>
+  <main class="shell">
+    <section class="stage">
+      <img id="frontImage" alt="front camera stream">
+      <div id="waiting" class="waiting">Waiting for policy reset/step...</div>
+    </section>
+    <aside class="side">
+      <div class="metrics">
+        <div class="metric"><span><svg class="icon" aria-hidden="true"><use href="#icon-clock"/></svg>Time</span><strong id="timestamp">--</strong></div>
+        <div class="metric"><span><svg class="icon" aria-hidden="true"><use href="#icon-connection"/></svg>Connection</span><strong id="connection">connecting</strong></div>
+      </div>
+      <div id="metricTableCard" class="metricTableCard">
+        <p class="plotTitle">policy metric</p>
+        <table class="metricTable">
+          <thead>
+            <tr><th></th><th>NC</th><th>DAC</th><th>TTC</th><th>COM</th><th>RC</th><th>RE</th></tr>
+          </thead>
+          <tbody id="metricTableBody"></tbody>
+        </table>
+      </div>
+      <div class="plotCard">
+        <p class="plotTitle"><span class="plotName"><svg class="icon" aria-hidden="true"><use href="#icon-speed"/></svg>Speed</span><strong class="plotValue"><span id="speed">--</span><small>m/s</small></strong></p>
+        <canvas id="speedPlot"></canvas>
+      </div>
+      <div class="plotCard">
+        <p class="plotTitle"><span class="plotName"><svg class="icon" aria-hidden="true"><use href="#icon-angular"/></svg>Angular velocity</span><strong class="plotValue"><span id="angularVelocity">--</span><small>rad/s</small></strong></p>
+        <canvas id="angularPlot"></canvas>
+      </div>
+    </aside>
+    <div class="bars">
+      <div class="barBox">
+        <div class="barLabel"><span>STEER</span><span id="steeringText">+0%</span></div>
+        <div class="track"><div id="steeringFill" class="fill"></div><div class="thumb"></div></div>
+        <div class="barScale"><span>LEFT 100%</span><span>0</span><span>RIGHT 100%</span></div>
+      </div>
+      <div class="barBox">
+        <div class="barLabel"><span>THROTTLE / BRAKE</span><span id="throttleText">+0%</span></div>
+        <div class="track"><div id="throttleFill" class="fill"></div><div class="thumb"></div></div>
+        <div class="barScale"><span>BRAKE 100%</span><span>0</span><span>THROTTLE 100%</span></div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const image = document.getElementById('frontImage');
+    const waiting = document.getElementById('waiting');
+    const connection = document.getElementById('connection');
+    const timestamp = document.getElementById('timestamp');
+    const speed = document.getElementById('speed');
+    const angularVelocity = document.getElementById('angularVelocity');
+    const steeringText = document.getElementById('steeringText');
+    const throttleText = document.getElementById('throttleText');
+    const steeringFill = document.getElementById('steeringFill');
+    const throttleFill = document.getElementById('throttleFill');
+    const speedPlot = document.getElementById('speedPlot');
+    const angularPlot = document.getElementById('angularPlot');
+    const metricTableCard = document.getElementById('metricTableCard');
+    const metricTableBody = document.getElementById('metricTableBody');
+    let lastSnapshot = null;
+    const keys = { w: false, a: false, s: false, d: false };
+
+    function signed(value) {
+      return `${value >= 0 ? '+' : '-'}${Math.round(Math.abs(value) * 100)}%`;
+    }
+
+    function updateBar(fill, text, value, direction) {
+      const clipped = Math.max(-1, Math.min(1, Number(value)));
+      text.textContent = signed(clipped);
+      const position = 50 + direction * clipped * 50;
+      fill.style.left = `${Math.min(50, position)}%`;
+      fill.style.width = `${Math.abs(clipped) * 50}%`;
+      fill.parentElement.style.setProperty('--position', `${position}%`);
+    }
+
+    function resizeCanvas(canvas) {
+      const rect = canvas.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      const width = Math.max(1, Math.floor(rect.width * dpr));
+      const height = Math.max(1, Math.floor(rect.height * dpr));
+      if (canvas.width !== width || canvas.height !== height) {
+        canvas.width = width;
+        canvas.height = height;
+      }
+      return { width, height, dpr };
+    }
+
+    function drawPlot(canvas, xs, ys) {
+      const { width, height, dpr } = resizeCanvas(canvas);
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, width, height);
+      const style = getComputedStyle(document.documentElement);
+      ctx.fillStyle = style.getPropertyValue('--panel');
+      ctx.fillRect(0, 0, width, height);
+
+      const padL = 60 * dpr;
+      const padR = 14 * dpr;
+      const padT = 16 * dpr;
+      const padB = 44 * dpr;
+      const plotW = Math.max(1, width - padL - padR);
+      const plotH = Math.max(1, height - padT - padB);
+
+      ctx.strokeStyle = style.getPropertyValue('--grid');
+      ctx.lineWidth = 1 * dpr;
+      ctx.beginPath();
+      for (let i = 0; i <= 4; i++) {
+        const y = padT + plotH * i / 4;
+        ctx.moveTo(padL, y);
+        ctx.lineTo(width - padR, y);
+      }
+      ctx.stroke();
+
+      ctx.fillStyle = style.getPropertyValue('--muted');
+      ctx.font = `${12 * dpr}px sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'alphabetic';
+      ctx.fillText('Time (s)', padL + plotW / 2, height - 4 * dpr);
+
+      if (!xs || !ys || xs.length < 2 || ys.length < 2) {
+        return;
+      }
+
+      const minX = Math.min(...xs);
+      const maxX = Math.max(...xs);
+      let minY = Math.min(...ys);
+      let maxY = Math.max(...ys);
+      const padding = Math.max((maxY - minY) * 0.08, Math.abs(minY) * 0.02, 0.002);
+      minY -= padding;
+      maxY += padding;
+      const xSpan = maxX === minX ? 1 : maxX - minX;
+      const ySpan = maxY - minY;
+
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'middle';
+      for (let i = 0; i <= 4; i++) {
+        const value = maxY - ySpan * i / 4;
+        ctx.fillText(Number(value.toFixed(3)).toFixed(3), padL - 10 * dpr, padT + plotH * i / 4);
+      }
+      for (let i = 0; i <= 4; i++) {
+        ctx.textAlign = i === 0 ? 'left' : i === 4 ? 'right' : 'center';
+        const seconds = (minX + (maxX - minX) * i / 4) / 1e6;
+        ctx.fillText(seconds.toFixed(2), padL + plotW * i / 4, height - 27 * dpr);
+      }
+
+      const path = new Path2D();
+      xs.forEach((x, idx) => {
+        const y = ys[idx];
+        const px = padL + ((x - minX) / xSpan) * plotW;
+        const py = padT + (1 - (y - minY) / ySpan) * plotH;
+        if (idx === 0) path.moveTo(px, py);
+        else path.lineTo(px, py);
+      });
+      const area = new Path2D(path);
+      area.lineTo(width - padR, padT + plotH);
+      area.lineTo(padL, padT + plotH);
+      area.closePath();
+      const gradient = ctx.createLinearGradient(0, padT, 0, padT + plotH);
+      gradient.addColorStop(0, 'rgba(35, 121, 201, 0.18)');
+      gradient.addColorStop(1, 'rgba(35, 121, 201, 0)');
+      ctx.fillStyle = gradient;
+      ctx.fill(area);
+      ctx.strokeStyle = style.getPropertyValue('--bar');
+      ctx.lineWidth = 2 * dpr;
+      ctx.lineJoin = 'round';
+      ctx.lineCap = 'round';
+      ctx.stroke(path);
+      ctx.fillStyle = style.getPropertyValue('--bar');
+      ctx.beginPath();
+      ctx.arc(padL + (xs[xs.length - 1] - minX) / xSpan * plotW,
+              padT + (1 - (ys[ys.length - 1] - minY) / ySpan) * plotH, 3 * dpr, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    function applySnapshot(snapshot) {
+      lastSnapshot = snapshot;
+      waiting.style.display = 'none';
+      image.src = snapshot.image;
+      timestamp.textContent = `${(Number(snapshot.timestamp) / 1e6).toFixed(3)} s`;
+      speed.textContent = Number(snapshot.speed).toFixed(3);
+      angularVelocity.textContent = Number(snapshot.angular_velocity).toFixed(3);
+      updateBar(steeringFill, steeringText, snapshot.steering, -1);
+      updateBar(throttleFill, throttleText, snapshot.throttle_brake, 1);
+      drawPlot(speedPlot, snapshot.timestamp_history, snapshot.speed_history);
+      drawPlot(angularPlot, snapshot.timestamp_history, snapshot.angular_velocity_history);
+    }
+
+    function clearView() {
+      lastSnapshot = null;
+      image.removeAttribute('src');
+      timestamp.textContent = '--';
+      speed.textContent = '--';
+      angularVelocity.textContent = '--';
+      updateBar(steeringFill, steeringText, 0, -1);
+      updateBar(throttleFill, throttleText, 0, 1);
+      drawPlot(speedPlot, [], []);
+      drawPlot(angularPlot, [], []);
+    }
+
+    function applyMetrics(metrics) {
+      metricTableBody.innerHTML = '';
+      if (!metrics) {
+        metricTableCard.style.display = 'none';
+        document.body.classList.remove('metricOnly');
+        return;
+      }
+      document.body.classList.add('metricOnly');
+      const columns = ['NC', 'DAC', 'TTC', 'COM', 'RC', 'RE'];
+      Object.entries(metrics).forEach(([name, values]) => {
+        const tr = document.createElement('tr');
+        const label = document.createElement('td');
+        label.textContent = name;
+        tr.appendChild(label);
+        columns.forEach((column) => {
+          const td = document.createElement('td');
+          const value = Number(values[column]);
+          td.textContent = Number.isFinite(value) ? value.toFixed(3) : String(values[column]);
+          tr.appendChild(td);
+        });
+        metricTableBody.appendChild(tr);
+      });
+      metricTableCard.style.display = 'block';
+    }
+
+    function takeOverAction() {
+      const steering = (keys.a ? 1 : 0) + (keys.d ? -1 : 0);
+      const throttleBrake = (keys.w ? 1 : 0) + (keys.s ? -1 : 0);
+      if (steering === 0 && throttleBrake === 0) return null;
+      return [steering, throttleBrake];
+    }
+
+    function sendTakeOverAction() {
+      fetch('/take_over_action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: takeOverAction() })
+      });
+    }
+
+    function connect() {
+      const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+      const ws = new WebSocket(`${protocol}://${window.location.host}/ws`);
+      ws.onopen = () => {
+        connection.textContent = 'connected';
+        sendTakeOverAction();
+      };
+      ws.onmessage = (event) => {
+        const message = JSON.parse(event.data);
+        if (message.type === 'waiting') {
+          clearView();
+          if ('metrics' in message) applyMetrics(message.metrics);
+          waiting.style.display = message.metrics ? 'none' : 'flex';
+          return;
+        }
+        if (message.type === 'frame') {
+          applySnapshot(message.snapshot);
+          return;
+        }
+        if (message.type === 'metrics') {
+          applyMetrics(message.metrics);
+        }
+      };
+      ws.onclose = () => {
+        connection.textContent = 'closed';
+        setTimeout(connect, 1000);
+      };
+      ws.onerror = () => {
+        connection.textContent = 'error';
+        ws.close();
+      };
+    }
+
+    window.addEventListener('keydown', (event) => {
+      const key = event.key.toLowerCase();
+      if (!(key in keys) || event.repeat) return;
+      keys[key] = true;
+      sendTakeOverAction();
+      event.preventDefault();
+    });
+
+    window.addEventListener('keyup', (event) => {
+      const key = event.key.toLowerCase();
+      if (!(key in keys)) return;
+      keys[key] = false;
+      sendTakeOverAction();
+      event.preventDefault();
+    });
+
+    window.addEventListener('blur', () => {
+      Object.keys(keys).forEach((key) => { keys[key] = false; });
+      sendTakeOverAction();
+    });
+
+    window.addEventListener('resize', () => {
+      if (lastSnapshot) {
+        drawPlot(speedPlot, lastSnapshot.timestamp_history, lastSnapshot.speed_history);
+        drawPlot(angularPlot, lastSnapshot.timestamp_history, lastSnapshot.angular_velocity_history);
+      } else {
+        drawPlot(speedPlot, [], []);
+        drawPlot(angularPlot, [], []);
+      }
+    });
+    connect();
+  </script>
+</body>
+</html>

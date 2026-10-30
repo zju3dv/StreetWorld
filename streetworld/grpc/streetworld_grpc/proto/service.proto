@@ -1,0 +1,39 @@
+syntax = "proto3";
+import "google/protobuf/struct.proto";
+
+import "common.proto";
+
+// Step request
+message StepRequest {
+    repeated float action = 1;  // [steering, throttle] or flattened N x 2 relative trajectory
+}
+
+// Step response
+message StepResponse {
+    bool status = 1; // 0 is success, 1 is error
+    string message = 2; // explain error reason, None for success
+    Observation observation = 3;
+    float reward = 4;
+    bool terminated = 5;
+    bool truncated = 6;
+    google.protobuf.Struct StepInfo = 7;
+
+}
+
+
+// Reset request
+message ResetRequest {}
+
+// Reset response
+message ResetResponse {
+    bool status = 1; // 0 is success, 1 is error
+    string message = 2; // explain error reason, None for success
+    Observation observation = 3;
+    google.protobuf.Struct StepInfo = 4;
+}
+
+// Service definition
+service EnvService {
+    rpc Reset(ResetRequest) returns (ResetResponse);
+    rpc Step(StepRequest) returns (StepResponse);
+}

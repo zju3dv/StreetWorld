@@ -1,0 +1,22 @@
+syntax = "proto3";
+import "google/protobuf/struct.proto";
+
+
+// Matrix (row-major flattened)
+message Matrix {
+    repeated double data = 1;  // Flattened matrix elements
+    int32 rows = 2;
+    int32 cols = 3;
+}
+
+// Image data for a single camera frame
+message CameraImage {
+    string camera_name = 1;
+    bytes image_data = 2;  // Raw RGB bytes (H * W * 3)
+    google.protobuf.Struct camera_info = 3;
+}
+
+message Observation {
+    repeated CameraImage images_observation = 1;  // All camera images (latest frame only)
+    optional google.protobuf.Struct other_observation = 2;
+}
