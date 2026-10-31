@@ -6,6 +6,8 @@ from typing import Dict, List
 import numpy as np
 from scipy.spatial.transform import Rotation
 
+from streetworld.utils.navigation_utils import project_to_polyline
+
 
 CRASH_REASONS = {
     "crash_vehicle",
@@ -34,9 +36,9 @@ class MetricCalculator:
     route_start_time: float | None = None
     route_end_time: float | None = None
     warmup_step: int = 0
-    _route_index: int | None = field(default=None, init=False)
+    _expert_trajectory: np.ndarray | None = field(default=None, init=False, repr=False)
 
-    def reset(self, warmup_step: int | None = None) -> None:
+    def reset(self, expert_trajectory: np.ndarray, warmup_step: int | None = None) -> None:
         self.warmup_step = 0 if warmup_step is None else warmup_step
         self.collision = False
         self.eval_steps = 0
@@ -44,22 +46,18 @@ class MetricCalculator:
         self.ttc_flags = []
         self.com_hits = 0
         self.route_progress = 0.0
-        self.route_length = 0.0
+        self._expert_trajectory = np.asarray(expert_trajectory, dtype=np.float64)
+        self.route_length = float(np.linalg.norm(np.diff(self._expert_trajectory, axis=0), axis=1).sum())
         self.route_start_progress = None
         self.route_end_progress = None
         self.route_start_time = None
         self.route_end_time = None
-        self._route_index = None
 
     def update(self, obs: dict, info: dict) -> None:
         """Calculate metrics from observations and episode metadata."""
         states = obs["states"]
-        navigation = obs["navigation"]
         episode_length = info["episode_length"]
-        self.route_progress = self._compute_route_progress(
-            states["ego_pos"][:2], navigation["waypoint"], navigation["cummulative_length"]
-        )
-        self.route_length = navigation["cummulative_length"][-1]
+        self.route_progress, _, _ = project_to_polyline(states["ego_pos"][:2], self._expert_trajectory)
         if episode_length < self.warmup_step:
             return
         timestamp = info["relative_timestamp"] * 1e-6
@@ -87,29 +85,6 @@ class MetricCalculator:
 
         self.route_end_progress = self.route_progress
         self.route_end_time = timestamp
-
-    def _compute_route_progress(self, position, path_xy, cumulative_length):
-        points = np.asarray(path_xy, dtype=np.float32)
-        position = np.asarray(position, dtype=np.float32)
-        if len(points) < 2:
-            raise ValueError("Navigation route must contain at least two points.")
-        if len(cumulative_length) != len(points):
-            raise ValueError("Navigation route and cumulative lengths must have equal lengths.")
-        start = 0 if self._route_index is None else max(0, self._route_index - 5)
-        end = len(points) - 1 if self._route_index is None else min(len(points) - 1, self._route_index + 50)
-        indices = np.arange(start, end)
-        segments = points[indices + 1] - points[indices]
-        lengths = np.linalg.norm(segments, axis=1)
-        valid = lengths >= 1e-6
-        if not valid.any():
-            raise ValueError("Navigation route has no nonzero-length segment.")
-        indices, segments, lengths = indices[valid], segments[valid], lengths[valid]
-        offsets = position - points[indices]
-        fractions = np.clip(np.sum(offsets * segments, axis=1) / lengths**2, 0.0, 1.0)
-        projections = points[indices] + fractions[:, None] * segments
-        closest = np.argmin(np.linalg.norm(projections - position, axis=1))
-        self._route_index = int(indices[closest])
-        return float(cumulative_length[self._route_index] + fractions[closest] * lengths[closest])
 
     @staticmethod
     def _compute_min_ttc(obs):

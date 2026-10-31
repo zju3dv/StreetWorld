@@ -7,8 +7,8 @@ import argparse
 from typing import Sequence
 
 from streetworld.config import Config
-from streetworld.configs.autovla_config import AUTOVLA_CONFIG
-from streetworld.configs.default_policy_config import DEFAULT_POLICY_CONFIG_0_5S
+from streetworld.configs.autovla_config import AUTOVLA_CONFIG, AUTOVLA_CONFIG_0_1S
+from streetworld.configs.default_policy_config import DEFAULT_POLICY_CONFIG_0_1S, DEFAULT_POLICY_CONFIG_0_5S
 from streetworld.configs.epona_config import EPONA_CONFIG
 from streetworld.configs.nurec_config import NUREC_CONFIG
 from streetworld.configs.openemma_config import OPENEMMA_CONFIG
@@ -22,6 +22,7 @@ from streetworld.ui.scene_selector import select_catalog_scenes
 
 InteractiveScenarioEnv = make_interactive_env(ScenarioEnv)
 AD_POLICY_CONFIGS = {
+    "default_0_1s": DEFAULT_POLICY_CONFIG_0_1S,
     "autovla": AUTOVLA_CONFIG,
     "epona": EPONA_CONFIG,
     "openemma": OPENEMMA_CONFIG,
@@ -29,6 +30,13 @@ AD_POLICY_CONFIGS = {
     "latent_transfuser": TRANSFUSER_CONFIG,
 }
 
+
+AD_POLICY_CONFIGS["transfuser_0_1s"] = Config(DEFAULT_POLICY_CONFIG_0_1S)
+AD_POLICY_CONFIGS["transfuser_0_1s"].merge_from(TRANSFUSER_CONFIG)
+AD_POLICY_CONFIGS["autovla_0_1s"] = Config(DEFAULT_POLICY_CONFIG_0_1S)
+AD_POLICY_CONFIGS["autovla_0_1s"].merge_from(AUTOVLA_CONFIG_0_1S)
+AD_POLICY_CONFIGS["epona_0_1s"] = Config(DEFAULT_POLICY_CONFIG_0_1S)
+AD_POLICY_CONFIGS["epona_0_1s"].merge_from(EPONA_CONFIG)
 
 def build_environment(
     *,

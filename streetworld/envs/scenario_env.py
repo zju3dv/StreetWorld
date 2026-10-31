@@ -27,7 +27,10 @@ class ScenarioEnv(BaseEnv):
     def _reset(self, seed: Union[None, int] = None, scene_id: Union[None, str] = None):
         self.reward_calculator.reset()
         obs, info = super()._reset(seed=seed, scene_id=scene_id)
-        self.metric_calculator.reset(warmup_step=self.agent_managers["actor"].warmup_step)
+        self.metric_calculator.reset(
+            expert_trajectory=self.actor_manager.expert_trajectory,
+            warmup_step=self.actor_manager.warmup_step,
+        )
         self.metric_calculator.update(obs, info)
         return obs, info
 

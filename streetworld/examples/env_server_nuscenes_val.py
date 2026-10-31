@@ -95,6 +95,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         async_mode=args.async_mode,
         tui=False,
     )
+    print(f"nuScenes benchmark config: ad_policy_config={args.ad_policy_config}, warmup_step={env.config['actor_config']['warmup_step']}, decision_repeat={env.config['decision_repeat']}, control_dt={env.config['actor_config']['policy_config']['control_dt']}, trajectory_dt={env.config['actor_config']['policy_config']['trajectory_dt']}", flush=True)
     measured_env = MetricCsvEnvironment(env, metrics_output, resume=args.resume)
     serve(measured_env, host=args.host, port=args.port)
     return 0

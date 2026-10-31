@@ -8,6 +8,7 @@ from streetworld.manager.agent_manager import AgentState
 from streetworld.obs.assembly_obs import AssemblyObservation
 from streetworld.obs.navigation_obs import NavigationObservation
 from streetworld.utils.math import wrap_to_pi
+from streetworld.utils.navigation_utils import project_to_polyline
 
 
 class RewardCalculator:
@@ -16,7 +17,6 @@ class RewardCalculator:
 
     def reset(self):
         self._last_progress_value = None
-        self._last_progress_idx = None
         self._episode_reward_sums = dict(
             progress=0.0,
             ttc=0.0,
@@ -57,14 +57,12 @@ class RewardCalculator:
         if state == AgentState.SUCCESS:
             success_bonus = float(config["success_bonus"])
 
-        progress, progress_idx, deviation = self._project_progress_along_path(
-            navigation._NavigationObservation__vehicle_xy(vehicle), navigation._path_xy, navigation._path_cumlen,
-            self._last_progress_idx,
-        )
+        position = np.asarray(vehicle.position)[:2]
+        progress, _, _ = project_to_polyline(position, actor_manager.expert_trajectory)
+        _, navigation_idx, deviation = project_to_polyline(position, navigation._path_xy)
         progress_delta = 0.0 if self._last_progress_value is None else progress - self._last_progress_value
         self._last_progress_value = progress
-        self._last_progress_idx = progress_idx
-        expert_state = navigation.get_reference_state(progress_idx)
+        expert_state = navigation.get_reference_state(navigation_idx)
         step_info["expert_available"] = 1 if expert_state else 0
         ego_speed = vehicle.speed
         diag_info["speed"] = ego_speed
@@ -244,48 +242,6 @@ class RewardCalculator:
         if not isinstance(observer, NavigationObservation):
             raise TypeError("Scenario reward requires a NavigationObservation.")
         return observer
-
-    def _project_progress_along_path(self, position, path_xy, path_cumlen, last_idx):
-        if len(path_xy) < 2:
-            raise ValueError("Navigation route must contain at least two points.")
-        pts = np.asarray(path_xy, dtype=np.float32)
-        if len(path_cumlen) != len(pts):
-            raise ValueError("Navigation route and cumulative lengths must have equal lengths.")
-        N = len(pts) - 1
-        if last_idx is None:
-            seg_range = range(0, N)
-        else:
-            k_low = 5
-            k_high = 50
-            lo = max(0, last_idx - k_low)
-            hi = min(N, last_idx + k_high)
-            seg_range = range(lo, hi)
-
-        best_progress = None
-        best_dist = np.inf
-        best_idx = None
-        pos = np.asarray(position, dtype=np.float32)
-
-        for idx in seg_range:
-            p0 = pts[idx]
-            p1 = pts[idx + 1]
-            seg = p1 - p0
-            seg_len = np.linalg.norm(seg)
-            if seg_len < 1e-6:
-                continue
-            t = float(np.dot(pos - p0, seg) / (seg_len ** 2))
-            t = 0.0 if t < 0.0 else 1.0 if t > 1.0 else t
-            proj = p0 + t * seg
-            dist = np.linalg.norm(pos - proj)
-            if dist < best_dist:
-                base = float(path_cumlen[idx])
-                best_progress = base + t * seg_len
-                best_dist = dist
-                best_idx = idx
-
-        if best_progress is None:
-            raise ValueError("Navigation route has no nonzero-length segment.")
-        return best_progress, best_idx, best_dist
 
     def _get_reference_direction(self, path_xy, idx):
         if path_xy is None or idx is None or len(path_xy) < 2:

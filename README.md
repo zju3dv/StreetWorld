@@ -43,7 +43,7 @@
 | Dataset | Scenes | Storage size | HD maps | Scene duration |
 | --- | ---: | --- | --- | --- |
 | [nuScenes](https://huggingface.co/datasets/lvchangfu/streetworld-benchmark) | 650 | 395 GiB | ✓ | 20 s |
-| [Waymo] | TBD | TBD | ✓ | 20 s |
+| Waymo | 600 | 694 GiB | ✓ | 20 s |
 | [NuRec 25.07](https://huggingface.co/datasets/nvidia/PhysicalAI-Autonomous-Vehicles-NuRec) | 923 | 1.51T | ✓ | 20 s |
 
 ## 🏆 StreetWorld leaderboard
