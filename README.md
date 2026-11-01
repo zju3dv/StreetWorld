@@ -66,17 +66,23 @@ Every E2E AD is evaluated on the 650 scenes in [`streetworld/examples/nuscene_li
 | 10 | [GenAD](https://github.com/wzzheng/GenAD) | 59.08 | 90.70 | 29.27 | 99.54 | 48.30 | 36.15 |
 | 11 | [Latent TransFuser](https://github.com/autonomousvision/transfuser) | 50.00 | 87.45 | 38.72 | 99.42 | 38.08 | 17.89 |
 | 12 | [OpenEMMA-Qwen2](https://github.com/taco-group/OpenEMMA) | 65.23 | 70.95 | 37.53 | 84.54 | 31.81 | 11.62 |
+| 13 | [OpenEMMA-Llama](https://github.com/taco-group/OpenEMMA) | 64.31 | 71.74 | 36.16 | 84.30 | 30.16 | 11.71 |
 
 ### nuScenes · 10 Hz
 
 | Rank | AD policy | NC ↑ (%) | DAC ↑ (%) | TTC ↑ (%) | COM ↑ (%) | RC ↑ (%) | RE ↑ (%) |
 | ---: | --- | ---: | ---: | ---: | ---: | ---: | ---: |
 | 1 | [ST-P3](https://github.com/OpenDriveLab/ST-P3) | 63.38 | 95.82 | 35.67 | 98.66 | 65.41 | 21.55 |
-| 2 | [VAD](https://github.com/hustvl/VAD) | 56.15 | 93.54 | 32.15 | 100.00 | 58.48 | 40.51 |
-| 3 | [UniAD](https://github.com/OpenDriveLab/UniAD) | 61.85 | 91.13 | 33.14 | 100.00 | 57.98 | 39.61 |
-| 4 | [OpenDriveVLA](https://github.com/DriveVLA/OpenDriveVLA) | 56.92 | 91.76 | 31.56 | 100.00 | 55.16 | 36.82 |
-| 5 | [AutoVLA](https://github.com/ucla-mobility/AutoVLA) | 53.54 | 94.48 | 37.44 | 96.77 | 50.61 | 17.45 |
-| 6 | [DiffusionDrive](https://github.com/hustvl/DiffusionDrive) | 43.38 | 97.35 | 41.74 | 99.88 | 35.11 | 12.48 |
+| 2 | [GenAD](https://github.com/wzzheng/GenAD) | 57.69 | 93.22 | 31.68 | 99.99 | 60.48 | 41.05 |
+| 3 | [VAD](https://github.com/hustvl/VAD) | 56.15 | 93.54 | 32.15 | 100.00 | 58.48 | 40.51 |
+| 4 | [UniAD](https://github.com/OpenDriveLab/UniAD) | 61.85 | 91.13 | 33.14 | 100.00 | 57.98 | 39.61 |
+| 5 | [MomAD](https://github.com/adept-thu/MomAD) | 51.54 | 97.00 | 35.63 | 99.60 | 56.92 | 19.03 |
+| 6 | [OpenDriveVLA](https://github.com/DriveVLA/OpenDriveVLA) | 56.92 | 91.76 | 31.56 | 100.00 | 55.16 | 36.82 |
+| 7 | [AutoVLA](https://github.com/ucla-mobility/AutoVLA) | 53.54 | 94.48 | 37.44 | 96.77 | 50.61 | 17.45 |
+| 8 | [Epona](https://github.com/Kevin-thu/Epona) | 58.00 | 91.65 | 38.58 | 98.15 | 50.36 | 17.46 |
+| 9 | [DiffusionDrive](https://github.com/hustvl/DiffusionDrive) | 43.38 | 97.35 | 41.74 | 99.88 | 35.11 | 12.48 |
+| 10 | [SparseDrive](https://github.com/swc-17/SparseDrive) | 45.38 | 97.50 | 42.03 | 99.97 | 34.07 | 11.97 |
+| 11 | [Latent TransFuser](https://github.com/autonomousvision/transfuser) | 57.23 | 86.40 | 43.06 | 78.51 | 27.05 | 12.40 |
 
 ## 📄 License
 

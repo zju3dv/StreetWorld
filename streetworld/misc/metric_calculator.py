@@ -37,8 +37,15 @@ class MetricCalculator:
     route_end_time: float | None = None
     warmup_step: int = 0
     _expert_trajectory: np.ndarray | None = field(default=None, init=False, repr=False)
+    _max_speed: float = field(init=False, repr=False)
 
-    def reset(self, expert_trajectory: np.ndarray, warmup_step: int | None = None) -> None:
+    def reset(
+        self, expert_trajectory: np.ndarray, max_speed: float, warmup_step: int | None = None
+    ) -> None:
+        """Reset scene metrics with the ego vehicle's maximum speed in m/s."""
+        if not np.isfinite(max_speed) or max_speed <= 0.0:
+            raise ValueError("max_speed must be finite and positive (m/s)")
+        self._max_speed = max_speed
         self.warmup_step = 0 if warmup_step is None else warmup_step
         self.collision = False
         self.eval_steps = 0
@@ -130,7 +137,7 @@ class MetricCalculator:
                         np.clip(completed_route_length / remaining_route_length, 0.0, 1.0)
                         if remaining_route_length > 0.0 else np.nan
                     ),
-                    "RE": completed_route_length / elapsed,
+                    "RE": completed_route_length / (elapsed * self._max_speed),
                 }
         self.completed_scene_metrics.append(metric)
         return metric

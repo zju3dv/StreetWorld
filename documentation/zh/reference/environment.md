@@ -197,9 +197,9 @@ ScenarioEnv 是用于在记录场景中训练和测评 AD policy 的 Environment
 | TTC | 最小 TTC 为 None 或至少 5 s 的步数占比 |
 | COM | 水平加速度模长不超过 2 m/s²，且偏航角速度绝对值不超过 0.5 rad/s 的步数占比 |
 | RC | 交接后路线进展 / 交接时剩余路线长度，限制在 [0, 1] |
-| RE | 交接后路线进展 / 仿真经过时间，单位 m/s |
+| RE | 交接后路线进展 /（仿真经过时间 × 主车最大速度），无量纲 |
 
-COM 检查角速度，计算器中的字段仍名为 yaw_acc_threshold。阈值由 MetricCalculator 设置，环境 Config 未开放这些字段。没有模型控制样本时，DAC/TTC/COM/RE 为 NaN，RC 为 0；剩余路线长度不为正时，RC 为 NaN。
+RE 使用的主车最大速度为 max_speed_km_h / 3.6，单位 m/s。COM 检查角速度，计算器中的字段仍名为 yaw_acc_threshold。阈值由 MetricCalculator 设置，环境 Config 未开放这些字段。没有模型控制样本时，DAC/TTC/COM/RE 为 NaN，RC 为 0；剩余路线长度不为正时，RC 为 NaN。
 
 ### 使用示例
 

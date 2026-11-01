@@ -29,6 +29,7 @@ class ScenarioEnv(BaseEnv):
         obs, info = super()._reset(seed=seed, scene_id=scene_id)
         self.metric_calculator.reset(
             expert_trajectory=self.actor_manager.expert_trajectory,
+            max_speed=self.actor_controller.max_speed_km_h / 3.6,
             warmup_step=self.actor_manager.warmup_step,
         )
         self.metric_calculator.update(obs, info)

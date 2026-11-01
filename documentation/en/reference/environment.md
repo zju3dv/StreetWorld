@@ -197,9 +197,9 @@ Model-controlled samples begin after expert warmup. The handover frame establish
 | TTC | Fraction of steps with minimum TTC either None or at least 5 s |
 | COM | Fraction of steps with horizontal acceleration at most 2 m/s² and absolute yaw rate at most 0.5 rad/s |
 | RC | Post-handover route progress / route length remaining at handover, clipped to [0, 1] |
-| RE | Post-handover route progress / elapsed simulation time, in m/s |
+| RE | Post-handover route progress / (elapsed simulation time × ego maximum speed), dimensionless |
 
-COM checks angular velocity although the calculator field is named yaw_acc_threshold. MetricCalculator defines these thresholds; Environment Config does not expose them. Without model-controlled samples, DAC/TTC/COM/RE are NaN and RC is 0. RC is NaN when remaining route length is nonpositive.
+RE uses the ego maximum speed max_speed_km_h / 3.6, in m/s. COM checks angular velocity although the calculator field is named yaw_acc_threshold. MetricCalculator defines these thresholds; Environment Config does not expose them. Without model-controlled samples, DAC/TTC/COM/RE are NaN and RC is 0. RC is NaN when remaining route length is nonpositive.
 
 ### Example
 
