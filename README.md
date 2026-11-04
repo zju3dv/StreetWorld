@@ -9,7 +9,7 @@
   Yongchen Zai<sup>2</sup>, Zhen Yang<sup>2</sup>, Tian Xie<sup>1</sup>,
   Hujun Bao<sup>1</sup>, Xiaowei Zhou<sup>1</sup>, Sida Peng<sup>1</sup>
   <br>
-  <sup>1</sup> Zhejiang University &nbsp; <sup>2</sup> BYD Company Limited
+  <sup>1</sup> Zhejiang University &nbsp; <sup>2</sup> BYD New Technology Research Institute
 </p>
 
 <p align="center">
