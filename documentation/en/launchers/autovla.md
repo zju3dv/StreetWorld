@@ -57,7 +57,7 @@ python -m policy_launcher.launch \
 | --- | --- |
 | Input | FRONT, FRONT_LEFT, and FRONT_RIGHT cameras, each with 4 frames spaced 0.5 s apart; also reads ego speed, steering, acceleration, and navigation commands |
 | Output | Decodes generated action tokens into a float32 (10, 2) trajectory in vehicle coordinates; configured for 0.5 s spacing and a 5 s horizon |
-| Notes | The autovla server preset sets warmup_step=4 and both trajectory/control intervals to 0.5 s. Client buffering handles incomplete initial history. |
+| Notes | The autovla server preset sets warmup_step=4, observation and trajectory intervals to 0.5 s, and vehicle control to 0.1 s. The controller tracks cached waypoints between observations without additional model inference. Client buffering handles incomplete initial history. |
 
 ---
 

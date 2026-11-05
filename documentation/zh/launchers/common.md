@@ -44,9 +44,9 @@ python -m policy_launcher.launch \
 
 | Launcher | 服务端配置 | 动作与时间 |
 | --- | --- | --- |
-| uniad、vad、genad、momad、stp3、opendrivevla、diffusiondrive、sparsedrive | default | 轨迹；默认 trajectory_dt/control_dt/决策周期均为 0.5 s |
+| uniad、vad、genad、momad、stp3、opendrivevla、diffusiondrive、sparsedrive | default | 轨迹；默认 trajectory_dt 与决策周期为 0.5 s，control_dt 为 0.1 s |
 | autovla | autovla | 轨迹 0.5 s；专家预热 4 步 |
-| epona | epona | 轨迹 0.1 s，控制与决策 0.5 s；专家预热 10 步 |
+| epona | epona | 轨迹与控制 0.1 s，决策 0.5 s；专家预热 10 步 |
 | openemma_* | openemma | 轨迹 0.5 s；专家预热 10 步 |
 | latent_transfuser | `latent_transfuser` | `[steering, throttle_brake]`，即转向和油门/制动 |
 | alpamayo1、alpamayo1.5 | `alpamayo`，选择 NuRec 场景 | 轨迹点间隔为 0.1 s |

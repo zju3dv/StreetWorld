@@ -44,9 +44,9 @@ python -m policy_launcher.launch \
 
 | Launcher | Server configuration | Action and timing |
 | --- | --- | --- |
-| uniad, vad, genad, momad, stp3, opendrivevla, diffusiondrive, sparsedrive | default | Trajectory input; trajectory_dt, control_dt, and decision period all default to 0.5 s |
+| uniad, vad, genad, momad, stp3, opendrivevla, diffusiondrive, sparsedrive | default | Trajectory input; trajectory_dt and decision period default to 0.5 s; control_dt is 0.1 s |
 | autovla | autovla | 0.5 s trajectory; 4 expert warmup steps |
-| epona | epona | 0.1 s trajectory, 0.5 s control and decision period; 10 expert warmup steps |
+| epona | epona | 0.1 s trajectory and control, 0.5 s decision period; 10 expert warmup steps |
 | openemma_* | openemma | 0.5 s trajectory; 10 expert warmup steps |
 | latent_transfuser | `latent_transfuser` | `[steering, throttle_brake]`: steering and throttle/brake |
 | alpamayo1, alpamayo1.5 | `alpamayo`; select a NuRec scene | Trajectory points spaced 0.1 s apart |

@@ -56,7 +56,7 @@ python -m policy_launcher.launch \
 | --- | --- |
 | 输入 | FRONT 图像、主车位置和旋转；缓存 condition_frames 帧，当前配置为 10。输入是客户端收到的连续观测帧。 |
 | 输出 | 模型 step_eval(..., traj_only=True) 输出 predict_traj，返回其前两维；默认 traj_len=15，服务端 trajectory_dt=0.1 s。 |
-| 注意事项 | epona preset 设置 trajectory_dt=0.1 s、warmup_step=10；环境决策周期和 control_dt 仍为 0.5 s，收到的观测为 2 Hz。上游 downsample_fps=10，两处频率设置不同。 |
+| 注意事项 | epona preset 设置 trajectory_dt=0.1 s、warmup_step=10；车辆控制间隔为 0.1 s，环境决策周期仍为 0.5 s，收到的观测为 2 Hz。上游 downsample_fps=10，两处观测频率不同。 |
 
 ---
 

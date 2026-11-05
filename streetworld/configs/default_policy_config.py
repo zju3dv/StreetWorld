@@ -11,7 +11,7 @@ DEFAULT_POLICY_CONFIG_0_5S = dict(
         policy=EnvInputILQRPolicy,
         policy_config=dict(
             trajectory_dt=0.5,
-            control_dt=0.5,
+            control_dt=0.1,
             smooth=False,
             max_acceleration=3.0,
         ),

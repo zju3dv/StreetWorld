@@ -2,7 +2,7 @@
   <img src="assets/streetworld-logo.svg" alt="StreetWorld logo" width="900">
 </p>
 
-# StreetWorld: A Comprehensive and Photorealistic Closed-Loop Autonomous Driving Benchmark
+# StreetWorld: A Photorealistic Closed-Loop Simulator for Benchmarking Autonomous Driving
 
 <p align="center">
   Lvchang Fu<sup>1</sup>, Hejiakang Cao<sup>1</sup>, Futang Zhu<sup>2</sup>,
@@ -99,7 +99,7 @@ We also thank the authors of the AD policies for releasing their code and model 
 
 ```bibtex
 @misc{streetworld,
-  title  = {StreetWorld: A Comprehensive and Photorealistic Closed-Loop Autonomous Driving Benchmark},
+  title  = {StreetWorld: A Photorealistic Closed-Loop Simulator for Benchmarking Autonomous Driving},
   author = {Fu, Lvchang and Cao, Hejiakang and Zhu, Futang and
             Zai, Yongchen and Yang, Zhen and Xie, Tian and
             Bao, Hujun and Zhou, Xiaowei and Peng, Sida},

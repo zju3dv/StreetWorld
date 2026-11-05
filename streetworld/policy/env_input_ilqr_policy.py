@@ -24,7 +24,7 @@ class EnvInputILQRPolicy(EnvInputPolicy):
         self.smooth = self.config["smooth"]
         self.max_acceleration = self.config["max_acceleration"]
         self.trajectory_dt = self.config["trajectory_dt"]
-        # TODO: control_dt must equal physics_world_step_size * decision_repeat. Other values currently cause a bug.
+        # Track cached waypoints between observations; control and observation clocks are independent.
         self.control_dt = self.config["control_dt"]
         self.control_dt_us = round(self.control_dt * 1e6)
         if self.control_dt_us % self.step_manager.step_size != 0:
@@ -60,6 +60,7 @@ class EnvInputILQRPolicy(EnvInputPolicy):
             max_steering_angle_rate=np.inf,
             min_velocity_linearization=0.01,
             wheelbase=self.wheelbase,
+            rear_axle_to_center=self.controller.REAR_WHEELBASE,
         )
         self._cached_waypoints = None
         self._cached_transform = self._xy_transform()

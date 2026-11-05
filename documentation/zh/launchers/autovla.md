@@ -57,7 +57,7 @@ python -m policy_launcher.launch \
 | --- | --- |
 | 输入 | FRONT、FRONT_LEFT、FRONT_RIGHT 三相机；各相机维护 4 帧、间隔 0.5 s 的视频历史。还读取主车速度、转向、加速度和导航命令。 |
 | 输出 | 生成动作 token 后解码为车辆坐标 float32 (10,2) 轨迹；模型配置为 0.5 s 间隔、5 s 范围。 |
-| 注意事项 | autovla 服务端 preset 设置 warmup_step=4，轨迹与控制间隔均为 0.5 s。初始化历史不足的帧由客户端缓存逻辑处理。 |
+| 注意事项 | autovla 服务端 preset 设置 warmup_step=4，观测与轨迹间隔为 0.5 s，车辆控制间隔为 0.1 s。控制器在观测之间跟踪缓存的轨迹点，不增加模型推理次数。初始化历史不足的帧由客户端缓存逻辑处理。 |
 
 ---
 

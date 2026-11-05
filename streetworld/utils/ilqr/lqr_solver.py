@@ -6,16 +6,18 @@ Original (Nonlinear) Discrete Time System:
     z_k = [x_k, y_k, theta_k, v_k, delta_k]
     u_k = [a_k, phi_k]
 
-    x_{k+1}     = x_k     + v_k * cos(theta_k) * dt
-    y_{k+1}     = y_k     + v_k * sin(theta_k) * dt
-    theta_{k+1} = theta_k + v_k * tan(delta_k) / L * dt
+    delta_{k+1} = clip(delta_k + phi_k * dt)
+    omega_k    = v_k * tan(delta_{k+1}) / L
+    x_{k+1}     = x_k     + (v_k * cos(theta_k) - l_r * omega_k * sin(theta_k)) * dt
+    y_{k+1}     = y_k     + (v_k * sin(theta_k) + l_r * omega_k * cos(theta_k)) * dt
+    theta_{k+1} = theta_k + omega_k * dt
     v_{k+1}     = v_k     + a_k * dt
-    delta_{k+1} = delta_k + phi_k * dt
 
-    where (x_k, y_k, theta_k) is the pose at timestep k with time discretization dt,
+    where (x_k, y_k, theta_k) is the vehicle center pose at timestep k with time discretization dt,
     v_k and a_k are velocity and acceleration,
     delta_k and phi_k are steering angle and steering angle rate,
-    and L is the vehicle wheelbase.
+    L is the vehicle wheelbase, and l_r is the rear-axle-to-center offset.
+    The controller applies delta_{k+1} immediately and holds it during this interval.
 
 Quadratic Tracking Cost:
     J = sum_{k=0}^{N-1} ||u_k||_2^{R_k} +
@@ -76,6 +78,7 @@ class ILQRSolverParameters:
     # Parameters for dynamics / linearization.
     min_velocity_linearization: float  # [m/s] Absolute value threshold below which linearization velocity is modified.
     wheelbase: float  # [m] Wheelbase length parameter for the vehicle.
+    rear_axle_to_center: float  # [m] Forward offset of the tracked vehicle center from the rear axle.
 
     def __post_init__(self) -> None:
         """Ensure entries lie in expected bounds and initialize wheelbase."""
@@ -92,6 +95,7 @@ class ILQRSolverParameters:
             assert getattr(self, entry) > 0.0, f"Field {entry} should be positive."
 
         assert self.max_steering_angle < np.pi / 2.0, "Max steering angle should be less than 90 degrees."
+        assert 0.0 <= self.rear_axle_to_center <= self.wheelbase, "Vehicle center should lie between the axles."
 
         if isinstance(self.max_solve_time, float):
             assert self.max_solve_time > 0.0, "The specified max solve time should be positive."
@@ -496,25 +500,29 @@ class ILQRSolver:
         current_input = self._clip_inputs(current_input)
         acceleration, steering_rate = current_input
 
-        # Euler integration of bicycle model.
+        # The policy commands the new steering angle before advancing Bullet.
         discretization_time = self._solver_params.discretization_time
         wheelbase = self._solver_params.wheelbase
+        center_offset = self._solver_params.rear_axle_to_center
+        requested_steering_angle = steering_angle + steering_rate * discretization_time
+        next_steering_angle = self._clip_steering_angle(requested_steering_angle)
+        current_input[1] = (next_steering_angle - steering_angle) / discretization_time
+        steering_derivative = float(abs(requested_steering_angle) < self._solver_params.max_steering_angle)
+        curvature = np.tan(next_steering_angle) / wheelbase
+        cos_heading, sin_heading = np.cos(heading), np.sin(heading)
+        center_forward = cos_heading - center_offset * curvature * sin_heading
+        center_left = sin_heading + center_offset * curvature * cos_heading
 
+        # Euler integration at the vehicle center, including its velocity from yaw rotation.
         next_state: DoubleMatrix = np.copy(current_state)
-        next_state[0] += velocity * np.cos(heading) * discretization_time
-        next_state[1] += velocity * np.sin(heading) * discretization_time
-        next_state[2] += velocity * np.tan(steering_angle) / wheelbase * discretization_time
+        next_state[0] += velocity * center_forward * discretization_time
+        next_state[1] += velocity * center_left * discretization_time
+        next_state[2] += velocity * curvature * discretization_time
         next_state[3] += acceleration * discretization_time
-        next_state[4] += steering_rate * discretization_time
+        next_state[4] = next_steering_angle
 
         # Constrain heading angle to lie within +/- pi.
         next_state[2] = principal_value(next_state[2])
-
-        # State constraints: clip the steering_angle within bounds and update steering_rate accordingly.
-        next_steering_angle = self._clip_steering_angle(next_state[4])
-        applied_steering_rate = (next_steering_angle - steering_angle) / discretization_time
-        next_state[4] = next_steering_angle
-        current_input[1] = applied_steering_rate
 
         # Now we construct and populate the state and input Jacobians.
         state_jacobian: DoubleMatrix = np.eye(self._n_states, dtype=np.float64)
@@ -530,17 +538,19 @@ class ILQRSolver:
             sign_velocity = 1.0 if velocity >= 0.0 else -1.0
             velocity = sign_velocity * min_velocity_linearization
 
-        state_jacobian[0, 2] = -velocity * np.sin(heading) * discretization_time
-        state_jacobian[0, 3] = np.cos(heading) * discretization_time
-
-        state_jacobian[1, 2] = velocity * np.cos(heading) * discretization_time
-        state_jacobian[1, 3] = np.sin(heading) * discretization_time
-
-        state_jacobian[2, 3] = np.tan(steering_angle) / wheelbase * discretization_time
-        state_jacobian[2, 4] = velocity * discretization_time / (wheelbase * np.cos(steering_angle) ** 2)
+        state_jacobian[0, 2] = -velocity * center_left * discretization_time
+        state_jacobian[0, 3] = center_forward * discretization_time
+        state_jacobian[1, 2] = velocity * center_forward * discretization_time
+        state_jacobian[1, 3] = center_left * discretization_time
+        state_jacobian[2, 3] = curvature * discretization_time
+        yaw_steering_derivative = velocity * discretization_time / (wheelbase * np.cos(next_steering_angle) ** 2)
+        state_jacobian[0, 4] = -center_offset * sin_heading * yaw_steering_derivative * steering_derivative
+        state_jacobian[1, 4] = center_offset * cos_heading * yaw_steering_derivative * steering_derivative
+        state_jacobian[2, 4] = yaw_steering_derivative * steering_derivative
+        state_jacobian[4, 4] = steering_derivative
 
         input_jacobian[3, 0] = discretization_time
-        input_jacobian[4, 1] = discretization_time
+        input_jacobian[:, 1] = state_jacobian[:, 4] * discretization_time
 
         return next_state, current_input, state_jacobian, input_jacobian
 

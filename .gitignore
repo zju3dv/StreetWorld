@@ -5,12 +5,9 @@
 *.rar
 /build/
 /dist/
-/documentation/build/
 /streetworld.egg-info/
 /streetworld/examples/**.png
 /streetworld/examples/**.jpg
-
-/documentation/*
 
 output*
 data

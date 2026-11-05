@@ -56,7 +56,7 @@ python -m policy_launcher.launch \
 | --- | --- |
 | Input | FRONT images and ego position/rotation; buffers condition_frames successive client observations, currently 10 |
 | Output | Calls step_eval(..., traj_only=True) and returns the first two dimensions of predict_traj. Default traj_len is 15; server trajectory_dt is 0.1 s |
-| Notes | The epona preset sets trajectory_dt=0.1 s and warmup_step=10. Environment decisions and control_dt remain at 0.5 s, so observations arrive at 2 Hz. The upstream downsample_fps is 10; these rates differ. |
+| Notes | The epona preset sets trajectory_dt=0.1 s and warmup_step=10. Vehicle control runs every 0.1 s; environment decisions remain at 0.5 s, so observations arrive at 2 Hz. The upstream downsample_fps is 10; the observation rates differ. |
 
 ---
 
